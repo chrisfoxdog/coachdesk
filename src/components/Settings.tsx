@@ -9,6 +9,7 @@ import {
   PrimaryButton,
   SecondaryButton,
   SectionTitle,
+  ThemeToggle,
   inputClass,
   labelClass,
 } from './ui';
@@ -66,6 +67,16 @@ export default function Settings() {
       <h1 className="text-[22px] font-semibold">Settings</h1>
       {notice && <div className="rounded-[10px] border-l-[3px] border-success bg-success/10 px-3 py-2 text-sm">{notice}</div>}
       {error && <ErrorBanner message={error} />}
+
+      <Card>
+        <SectionTitle>Appearance</SectionTitle>
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-sm text-secondary">
+            CoachDesk is dark by design. Switch to light if you prefer it — the choice is saved on this device.
+          </p>
+          <ThemeToggle />
+        </div>
+      </Card>
 
       {settings && (
         <Card>

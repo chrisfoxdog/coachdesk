@@ -1,7 +1,10 @@
 @import "tailwindcss";
 
 /* CoachDesk design tokens (coachdesk-design-system.md §3). Components use
-   token classes only — raw hex in a component is a review failure. */
+   token classes only — raw hex in a component is a review failure.
+   The @theme values below are the DARK theme — the Elite brand default.
+   The light theme is a token override under [data-theme="light"], further
+   down; components never change between themes. */
 @theme {
   --color-app: #020617;
   --color-surface: #0f172a;
@@ -23,9 +26,47 @@
   --color-urgent: #fb7185;
   --color-sky: #38bdf8;
   --color-orange: #fb923c;
+  /* Text on bright/status fills (status badges, count pills). Dark navy on
+     the vivid dark-theme fills; flips to white in the light theme, whose
+     fills step deeper to hold contrast. */
+  --color-onbright: #020617;
 
   --font-sans: "Inter", -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", Consolas, monospace;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+/* Light theme — an explicit user choice (dark stays the default).
+   The same Elite system inverted: light blue-grey surfaces, a white card
+   step, midnight-blue text, and the same electric-blue accent (#2563eb —
+   identical in both themes, so it is not redeclared). Semantic colors step
+   deeper than their dark-theme values so their text forms keep AA contrast
+   on light surfaces, and --color-onbright flips to white so badge text
+   holds on those deeper fills. Unlayered on purpose: it must override the
+   layered @theme variables above. */
+[data-theme="light"] {
+  color-scheme: light;
+  --color-app: #e9eef5;
+  --color-surface: #ffffff;
+  --color-raised: #eef2f7;
+  --color-overlay: #ffffff;
+  --color-line: #d5dee9;
+  --color-strong: #94a3b8;
+  --color-primary: #0f172a;
+  --color-secondary: #334155;
+  --color-muted: #64748b;
+  --color-disabled: #94a3b8;
+  --color-bright: #2563eb;
+  --color-success: #047857;
+  --color-warning: #b45309;
+  --color-danger: #dc2626;
+  --color-urgent: #e11d48;
+  --color-sky: #0284c7;
+  --color-orange: #ea580c;
+  --color-onbright: #ffffff;
 }
 
 html {

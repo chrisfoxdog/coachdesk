@@ -12,6 +12,7 @@ import {
   SectionTitle,
   SharedMarker,
   SkeletonRows,
+  ThemeToggle,
 } from './ui';
 
 /**
@@ -75,11 +76,14 @@ export default function ClientHome() {
 
   return (
     <main className="mx-auto flex w-full max-w-[640px] flex-col gap-4 px-4 py-5">
-      <header>
-        <h1 className="text-[22px] font-semibold">{firstName}'s coaching home</h1>
-        <p className="text-xs text-muted">
-          Week {home.client.program_week} · with {home.coach.display_name} · Started {formatDate(home.client.started_at)}
-        </p>
+      <header className="flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-[22px] font-semibold">{firstName}'s coaching home</h1>
+          <p className="text-xs text-muted">
+            Week {home.client.program_week} · with {home.coach.display_name} · Started {formatDate(home.client.started_at)}
+          </p>
+        </div>
+        <ThemeToggle />
       </header>
       {error && <ErrorBanner message={error} />}
 

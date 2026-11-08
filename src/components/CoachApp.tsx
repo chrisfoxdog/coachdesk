@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { api } from '../api';
 import type { RosterClient } from '../types';
 import { formatDate } from '../types';
-import { Avatar, Card, EmptyState, ErrorBanner, GhostButton, SkeletonRows, StatusDot, inputClass } from './ui';
+import { Avatar, Card, EmptyState, ErrorBanner, GhostButton, SkeletonRows, StatusDot, ThemeToggle, inputClass } from './ui';
 import ClientRecord from './ClientRecord';
 import Inbox from './Inbox';
 import Settings from './Settings';
@@ -55,7 +55,7 @@ export default function CoachApp({ coachName }: { coachName: string }) {
               >
                 {item.label}
                 {item.badge ? (
-                  <span className="ml-auto rounded-full bg-warning px-2 py-0.5 text-[11px] font-semibold text-app">
+                  <span className="ml-auto rounded-full bg-warning px-2 py-0.5 text-[11px] font-semibold text-onbright">
                     {item.badge}
                   </span>
                 ) : null}
@@ -63,7 +63,10 @@ export default function CoachApp({ coachName }: { coachName: string }) {
             </li>
           ))}
         </ul>
-        <p className="mt-auto text-xs text-muted">{coachName}</p>
+        <div className="mt-auto flex flex-col items-start gap-3">
+          <ThemeToggle />
+          <p className="text-xs text-muted">{coachName}</p>
+        </div>
       </nav>
 
       <main className="min-w-0 flex-1 px-4 pb-24 pt-4 md:pb-10 md:pt-6">
@@ -93,13 +96,16 @@ export default function CoachApp({ coachName }: { coachName: string }) {
                 {item.name === 'roster' ? '☰' : item.name === 'inbox' ? '⚑' : '⚙'}
                 {item.label}
                 {item.badge ? (
-                  <span className="absolute right-[22%] top-1.5 rounded-full bg-warning px-1.5 py-px text-[10px] font-semibold text-app">
+                  <span className="absolute right-[22%] top-1.5 rounded-full bg-warning px-1.5 py-px text-[10px] font-semibold text-onbright">
                     {item.badge}
                   </span>
                 ) : null}
               </button>
             </li>
           ))}
+          <li className="flex-1">
+            <ThemeToggle compact />
+          </li>
         </ul>
       </nav>
     </div>

@@ -1,7 +1,44 @@
 import type { ReactNode } from 'react';
 import { initials } from '../types';
+import { useTheme } from '../theme';
 
 // Shared atoms (design system §5). Token classes only.
+
+/** Dark/light theme choice. Dark is the brand default; the choice persists
+ *  per browser (see ../theme.ts). `compact` matches the mobile tab bar. */
+export function ThemeToggle({ compact = false }: { compact?: boolean }) {
+  const { theme, toggleTheme } = useTheme();
+  const toLight = theme === 'dark';
+  const label = toLight ? 'Switch to light mode' : 'Switch to dark mode';
+  if (compact) {
+    return (
+      <button
+        type="button"
+        onClick={toggleTheme}
+        aria-label={label}
+        title={label}
+        className="flex min-h-[56px] w-full flex-col items-center justify-center gap-0.5 text-[11px] font-medium text-muted"
+      >
+        <span aria-hidden className="text-base leading-none">
+          {toLight ? '☀' : '☾'}
+        </span>
+        {toLight ? 'Light' : 'Dark'}
+      </button>
+    );
+  }
+  return (
+    <button
+      type="button"
+      onClick={toggleTheme}
+      aria-label={label}
+      title={label}
+      className="inline-flex min-h-[40px] shrink-0 items-center justify-center gap-1.5 rounded-[10px] border border-strong bg-raised px-3 text-sm font-medium text-secondary transition-colors hover:border-bright"
+    >
+      <span aria-hidden>{toLight ? '☀' : '☾'}</span>
+      {toLight ? 'Light' : 'Dark'}
+    </button>
+  );
+}
 
 export function Avatar({ name, size = 32 }: { name: string; size?: number }) {
   return (
@@ -16,19 +53,19 @@ export function Avatar({ name, size = 32 }: { name: string; size?: number }) {
 }
 
 const STATUS_STYLES: Record<string, string> = {
-  active: 'bg-success text-app',
-  trialing: 'bg-sky text-app',
-  past_due: 'bg-warning text-app',
-  cancelled: 'bg-orange text-app',
-  ended: 'bg-muted text-app',
-  archived: 'bg-muted text-app',
+  active: 'bg-success text-onbright',
+  trialing: 'bg-sky text-onbright',
+  past_due: 'bg-warning text-onbright',
+  cancelled: 'bg-orange text-onbright',
+  ended: 'bg-muted text-onbright',
+  archived: 'bg-muted text-onbright',
 };
 
 export function StatusBadge({ status }: { status: string }) {
   const label = status === 'past_due' ? 'Past due' : status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' ');
   return (
     <span
-      className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${STATUS_STYLES[status] || 'bg-muted text-app'}`}
+      className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${STATUS_STYLES[status] || 'bg-muted text-onbright'}`}
     >
       {label}
     </span>

@@ -3,6 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      // Theme init (runs before first paint — no flash of the wrong theme).
+      // Dark is the Elite brand default; only a saved choice can override it.
+      try {
+        document.documentElement.dataset.theme =
+          localStorage.getItem('coachdesk-theme') === 'light' ? 'light' : 'dark';
+      } catch (e) {
+        document.documentElement.dataset.theme = 'dark';
+      }
+    </script>
     <title>CoachDesk — The Client Record for Whop Coaches</title>
     <meta name="description" content="CoachDesk gives every coaching client a real record inside your Whop — intake, goals, session notes, check-ins and history — created automatically when they join. Your client notes stay your client notes: no AI processing, ever." />
     <meta property="og:title" content="CoachDesk" />
