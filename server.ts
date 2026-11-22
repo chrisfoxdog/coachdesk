@@ -299,6 +299,67 @@ app.get('/api/coach/roster', requireIdentity, requireCoach, async (req, res) => 
   return res.json({ clients: rows, total, limit, offset });
 });
 
+// Read-only dashboard aggregate: headline counts and recent activity computed
+// from the coach's own records. Counts and dates only — it never reads note
+// or answer content (privacy model §3), same as the flags engine.
+app.get('/api/coach/dashboard', requireIdentity, requireCoach, async (req, res) => {
+  const coach = req.identity!.coach;
+  await deriveCoachState(db, coach);
+  const [clients, checkins, flags, events, logs] = await Promise.all([
+    db.getAll<Client>('clients'),
+    db.getAll<any>('checkins'),
+    db.getAll<any>('needs_attention_flags'),
+    db.getAll<any>('client_events'),
+    db.getAll<any>('session_logs'),
+  ]);
+  const mine = clients.filter((c) => c.coach_id === coach.id);
+  const active = mine.filter((c) => c.status === 'active');
+  const activeIds = new Set(active.map((c) => c.id));
+  const myIds = new Set(mine.map((c) => c.id));
+  const weekAgo = Date.now() - 7 * 86400000;
+  const nameOf = (id: string) => mine.find((c) => c.id === id)?.display_name || 'Client';
+  const myCheckins = checkins.filter((c) => activeIds.has(c.client_id));
+
+  return res.json({
+    counts: {
+      active_clients: active.length,
+      archived_clients: mine.length - active.length,
+      new_clients_7d: active.filter((c) => new Date(c.started_at).getTime() >= weekAgo).length,
+      open_flags: flags.filter((f) => f.coach_id === coach.id && f.status === 'open').length,
+      checkins_awaiting: myCheckins.filter((c) => c.status === 'pending').length,
+      checkins_missed: myCheckins.filter((c) => c.status === 'missed').length,
+      checkins_submitted_7d: myCheckins.filter(
+        (c) => c.status === 'submitted' && c.submitted_at && new Date(c.submitted_at).getTime() >= weekAgo
+      ).length,
+      sessions_logged_7d: logs.filter(
+        (l) => myIds.has(l.client_id) && new Date(l.session_at).getTime() >= weekAgo
+      ).length,
+    },
+    recent_clients: active
+      .slice()
+      .sort((a, b) => b.started_at.localeCompare(a.started_at))
+      .slice(0, 5)
+      .map((c) => ({
+        id: c.id,
+        display_name: c.display_name,
+        started_at: c.started_at,
+        program_week: programWeek(c.started_at),
+      })),
+    recent_activity: events
+      .filter((e) => e.coach_id === coach.id)
+      .sort((a, b) => b.occurred_at.localeCompare(a.occurred_at))
+      .slice(0, 8)
+      .map((e) => ({
+        id: e.id,
+        client_id: e.client_id,
+        client_name: nameOf(e.client_id),
+        type: e.type,
+        summary: e.summary,
+        occurred_at: e.occurred_at,
+      })),
+  });
+});
+
 app.get('/api/coach/clients/:id', requireIdentity, requireCoach, async (req, res) => {
   const coach = req.identity!.coach;
   const client = await coachClientOr404(req, res, req.params.id);

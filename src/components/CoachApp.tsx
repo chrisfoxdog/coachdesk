@@ -4,14 +4,44 @@ import type { RosterClient } from '../types';
 import { formatDate } from '../types';
 import { Avatar, Card, EmptyState, ErrorBanner, GhostButton, SkeletonRows, StatusDot, ThemeToggle, inputClass } from './ui';
 import ClientRecord from './ClientRecord';
+import Dashboard from './Dashboard';
+import { HelpView, Walkthrough } from './Help';
 import Inbox from './Inbox';
 import Settings from './Settings';
 
-type View = { name: 'roster' } | { name: 'inbox' } | { name: 'settings' } | { name: 'record'; id: string; from: 'roster' | 'inbox' };
+type RecordFrom = 'roster' | 'inbox' | 'dashboard';
+type NavName = 'dashboard' | 'roster' | 'inbox' | 'help' | 'settings';
+type View =
+  | { name: 'dashboard' }
+  | { name: 'roster' }
+  | { name: 'inbox' }
+  | { name: 'help' }
+  | { name: 'settings' }
+  | { name: 'record'; id: string; from: RecordFrom };
+
+const TOUR_SEEN_KEY = 'cd_walkthrough_seen_v1';
+
+function tourSeen(): boolean {
+  try {
+    return localStorage.getItem(TOUR_SEEN_KEY) === '1';
+  } catch {
+    return true; // storage unavailable — never trap the coach behind a tour
+  }
+}
 
 export default function CoachApp({ coachName }: { coachName: string }) {
-  const [view, setView] = useState<View>({ name: 'roster' });
+  const [view, setView] = useState<View>({ name: 'dashboard' });
   const [openCount, setOpenCount] = useState(0);
+  const [tourOpen, setTourOpen] = useState(() => !tourSeen());
+
+  const closeTour = () => {
+    setTourOpen(false);
+    try {
+      localStorage.setItem(TOUR_SEEN_KEY, '1');
+    } catch {
+      // Non-fatal: the tour may reappear next visit, nothing else breaks.
+    }
+  };
 
   const refreshBadge = useCallback(() => {
     api
@@ -24,14 +54,31 @@ export default function CoachApp({ coachName }: { coachName: string }) {
     refreshBadge();
   }, [refreshBadge, view]);
 
-  const openRecord = (id: string, from: 'roster' | 'inbox') => setView({ name: 'record', id, from });
+  const openRecord = (id: string, from: RecordFrom) => setView({ name: 'record', id, from });
+  const goNav = (name: NavName) => {
+    switch (name) {
+      case 'dashboard':
+        return setView({ name: 'dashboard' });
+      case 'roster':
+        return setView({ name: 'roster' });
+      case 'inbox':
+        return setView({ name: 'inbox' });
+      case 'help':
+        return setView({ name: 'help' });
+      case 'settings':
+        return setView({ name: 'settings' });
+    }
+  };
 
-  const navItems: { name: View['name']; label: string; badge?: number }[] = [
+  const navItems: { name: NavName; label: string; badge?: number }[] = [
+    { name: 'dashboard', label: 'Dashboard' },
     { name: 'roster', label: 'Roster' },
     { name: 'inbox', label: 'Inbox', badge: openCount },
+    { name: 'help', label: 'How to use' },
     { name: 'settings', label: 'Settings' },
   ];
-  const isActive = (n: string) => view.name === n || (n === 'roster' && view.name === 'record');
+  const isActive = (n: string) =>
+    view.name === n || (view.name === 'record' && ((n === 'roster' && view.from === 'roster') || (n === 'dashboard' && view.from === 'dashboard') || (n === 'inbox' && view.from === 'inbox')));
 
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-[1120px] md:flex-row">
@@ -70,13 +117,29 @@ export default function CoachApp({ coachName }: { coachName: string }) {
       </nav>
 
       <main className="min-w-0 flex-1 px-4 pb-24 pt-4 md:pb-10 md:pt-6">
+        {view.name === 'dashboard' && (
+          <Dashboard
+            coachName={coachName}
+            onOpenClient={(id) => openRecord(id, 'dashboard')}
+            onNavigate={goNav}
+            onShowTour={() => setTourOpen(true)}
+          />
+        )}
         {view.name === 'roster' && <Roster onOpen={(id) => openRecord(id, 'roster')} />}
         {view.name === 'inbox' && <Inbox onOpen={(id) => openRecord(id, 'inbox')} />}
+        {view.name === 'help' && <HelpView onNavigate={goNav} onReplayTour={() => setTourOpen(true)} />}
         {view.name === 'settings' && <Settings />}
         {view.name === 'record' && (
-          <ClientRecord clientId={view.id} onBack={() => setView(view.from === 'inbox' ? { name: 'inbox' } : { name: 'roster' })} />
+          <ClientRecord
+            clientId={view.id}
+            onBack={() =>
+              setView(view.from === 'inbox' ? { name: 'inbox' } : view.from === 'dashboard' ? { name: 'dashboard' } : { name: 'roster' })
+            }
+          />
         )}
       </main>
+
+      {tourOpen && <Walkthrough onClose={closeTour} onNavigate={goNav} />}
 
       {/* Bottom tab bar (base) */}
       <nav
@@ -93,7 +156,15 @@ export default function CoachApp({ coachName }: { coachName: string }) {
                   isActive(item.name) ? 'text-bright' : 'text-muted'
                 }`}
               >
-                {item.name === 'roster' ? '☰' : item.name === 'inbox' ? '⚑' : '⚙'}
+                {item.name === 'dashboard'
+                  ? '⌂'
+                  : item.name === 'roster'
+                    ? '☰'
+                    : item.name === 'inbox'
+                      ? '⚑'
+                      : item.name === 'help'
+                        ? '?'
+                        : '⚙'}
                 {item.label}
                 {item.badge ? (
                   <span className="absolute right-[22%] top-1.5 rounded-full bg-warning px-1.5 py-px text-[10px] font-semibold text-onbright">

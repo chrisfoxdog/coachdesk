@@ -19,6 +19,28 @@ export interface RosterClient {
   deletion_requested: boolean;
 }
 
+export interface DashboardData {
+  counts: {
+    active_clients: number;
+    archived_clients: number;
+    new_clients_7d: number;
+    open_flags: number;
+    checkins_awaiting: number;
+    checkins_missed: number;
+    checkins_submitted_7d: number;
+    sessions_logged_7d: number;
+  };
+  recent_clients: { id: string; display_name: string; started_at: string; program_week: number }[];
+  recent_activity: {
+    id: string;
+    client_id: string;
+    client_name: string;
+    type: string;
+    summary: string;
+    occurred_at: string;
+  }[];
+}
+
 export interface Flag {
   id: string;
   client_id: string;
